@@ -43,6 +43,8 @@ const createBook = async (req: Request, res: Response) => {
 
     console.log("coverImage uploadResult", uploadResult);
     console.log("bookFile uploadResult", bookUploadResult);
+    // @ts-ignore
+    console.log("userId", req.userId);
 
     const newBook = await BookModel.create({
       title,
@@ -55,19 +57,15 @@ const createBook = async (req: Request, res: Response) => {
     try {
       await fs.promises.unlink(coverImageFile.path);
       await fs.promises.unlink(bookFile.path);
+      console.log("Local files deleted successfully");
     } catch (error) {
       console.error("Error deleting files:", error);
-      return res.status(500).json({ err: "Error while deleting files" });
+      // Don't return error here, just log it
     }
-    res.status(201).json({
+
+    return res.status(201).json({
       msg: "Book created successfully",
       book: newBook,
-    });
-
-    res.status(201).json({ id: newBook._id });
-
-    return res.json({
-      msg: "files uploaded successfully",
       coverImage: uploadResult,
       bookFile: bookUploadResult,
     });
