@@ -1,10 +1,12 @@
 import type { Request, Response } from "express";
 import path from "path";
 import cloudinary from "../config/cloudinary.ts";
+import fs from "fs";
+import BookModel from "./bookModel.ts";
 
 const createBook = async (req: Request, res: Response) => {
   try {
-    // const { title, genre, description } = req.body;
+    const { title, genre } = req.body;
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
@@ -41,6 +43,28 @@ const createBook = async (req: Request, res: Response) => {
 
     console.log("coverImage uploadResult", uploadResult);
     console.log("bookFile uploadResult", bookUploadResult);
+
+    const newBook = await BookModel.create({
+      title,
+      genre,
+      author: "68b2d4b6761109971e000484",
+      coverImage: uploadResult.secure_url,
+      bookFile: bookUploadResult.secure_url,
+    });
+
+    try {
+      await fs.promises.unlink(coverImageFile.path);
+      await fs.promises.unlink(bookFile.path);
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      return res.status(500).json({ err: "Error while deleting files" });
+    }
+    res.status(201).json({
+      msg: "Book created successfully",
+      book: newBook,
+    });
+
+    res.status(201).json({ id: newBook._id });
 
     return res.json({
       msg: "files uploaded successfully",
